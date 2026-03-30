@@ -2,7 +2,7 @@
 
 > **The Zero-Boilerplate & Type-Safe Environment Manager.**
 
-Envium is the modern solution for Node.js environment variable management. Unlike traditional tools like `dotenv` that merely load loose strings, Envium **segments, validates, strictly types, and protects** your application's configuration powered by SOLID principles and robust Developer Experience (DX). It also provides **event-driven watch functionality** for hot-reloading in development.
+Envium is the modern solution for Node.js environment variable management. Unlike traditional tools like `dotenv` that merely load loose strings, Envium **segments, validates, strictly types, and protects** your application's configuration powered by SOLID principles and robust Developer Experience (DX). It also provides **event-driven watch functionality** and **flat destructuring support** for hot-reloading in development.
 
 ---
 
@@ -12,6 +12,7 @@ Envium is the modern solution for Node.js environment variable management. Unlik
 - **🛡️ Differential Security:** Applies Strict **Immutability** (`writable: false`, `configurable: false`) in Production and permissive **Hot-Reloading** (`fs.watch`) in Development scenarios.
 - **🛑 Fail-Fast Validation:** Automatically checks runtime variables against a schema. The system prevents app execution if any required variable is missing or mismatched.
 - **🪄 Magic TypeScript Autocomplete:** Inject your schema once and gain deep nested autocomplete (e.g. `env.DATABASE.PORT`) powered by native TypeScript generics. Zero `.d.ts` boilerplate generations hiding in your root.
+- **🔄 Flat Destructuring:** Destructure environment variables using flat keys within groups (e.g. `const { ACCESS_KEY_ID } = env.AWS;`) alongside nested access, making integration with third-party libraries seamless.
 - **☁️ Cloud Deployments Compatible:** Features a robust "Unflattening" engine that seamlessly maps flat CI/CD variables (like `DATABASE_PORT=5432` from Vercel or AWS) into your grouped `env.DATABASE.PORT` runtime without changing a line of code.
 - **🛠️ Automated CLI DX:** Integrated CLI automating the creation of `.env.example` placeholders, Markdown documentation, and validation hooks.
 
@@ -80,17 +81,24 @@ export const env = init({
 });
 ```
 
-### 4. Deep Autocomplete Usage
-Access your exact types intuitively everywhere deeply integrated.
+### 4. Destructuring Support (Flat or Nested)
+Envium supports **both nested and flat destructuring** for maximum flexibility and cleaner code:
 
 ```typescript
 import { env } from 'envium-js';
 
-console.log(env.SERVER.PORT); // Typed precisely as 'number'!
+// Flat destructuring from groups 
+const { ENDPOINT, REGION, ACCESS_KEY_ID, SECRET_ACCESS_KEY } = env.AWS;
 
-if (env.SERVER.DEBUG) {
-  console.log(\`Conectando a \${env.DATABASE.HOST}\`);
-}
+// Nested destructuring
+const { ENDPOINT, REGION, ACCESS: { KEY: { ID: ACCESS_KEY_ID } } } = env.AWS;
+
+// Mix and match
+const REGION = env.AWS.REGION; // Nested access
+const ACCESS_KEY_ID = env.AWS.ACCESS_KEY_ID; // Flat access
+```
+
+This makes configuration code cleaner and more intuitive, especially for AWS SDKs and similar libraries.
 ---
 
 ## 📡 Event Emitters & Watch Functionality

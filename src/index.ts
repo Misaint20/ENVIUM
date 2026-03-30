@@ -5,6 +5,7 @@ import { DevStrategy } from './security/DevStrategy';
 import { ProdStrategy } from './security/ProdStrategy';
 import { Injector } from './core/Injector';
 import { ProxyFactory } from './core/ProxyFactory';
+import { addFlatAliasesToData } from './utils/flattening';
 import * as fs from 'node:fs';
 import { EventEmitter } from 'node:events';
 
@@ -67,10 +68,13 @@ export function init<T extends SchemaNode>(
     }
   }
 
-  // Step 3: Inject flat aliases into process.env for cloud compatibility
+  // Step 4: Add flat aliases to data for destructuring support
+  addFlatAliasesToData(unifiedData, config.schema);
+
+  // Step 5: Inject flat aliases into process.env for cloud compatibility
   Injector.createFlatAliases(unifiedData);
 
-  // Step 4: Apply security strategy to the data
+  // Step 6: Apply security strategy to the data
   const strategy = mode === 'production'
     ? new ProdStrategy()
     : new DevStrategy(path);
@@ -78,10 +82,10 @@ export function init<T extends SchemaNode>(
   // Apply strategy to process.env and data
   strategy.apply(process.env, unifiedData);
 
-  // Step 5: Create proxy with Symbol support
+  // Step 7: Create proxy with Symbol support
   proxyEnv = ProxyFactory.createEventedProxy(unifiedData, strategy, eventEmitter);
 
-  // Step 6: Setup hot-reload for development
+  // Step 8: Setup hot-reload for development
   if (strategy instanceof DevStrategy && config.watch !== false) {
     strategy.on('reload', (newParsedData: EnvData) => {
       try {
@@ -96,6 +100,9 @@ export function init<T extends SchemaNode>(
           );
           NativeValidator.validate(reloadData, config.schema);
         }
+
+        // Add flat aliases to reloaded data
+        addFlatAliasesToData(reloadData, config.schema);
 
         // Update the underlying data (proxy will reflect changes)
         Object.keys(unifiedData).forEach(key => delete unifiedData[key]);

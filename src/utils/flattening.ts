@@ -201,6 +201,63 @@ export function createFlatAliases(
 }
 
 /**
+ * Adds flat aliases directly to the data object for destructuring support
+ * @param data - The nested data object to modify
+ * @param schema - Schema to determine which keys to flatten (optional)
+ */
+export function addFlatAliasesToData(data: EnvData, schema?: SchemaNode): void {
+    if (!schema) return;
+
+    // Create a map of flattened keys to their nested values
+    const flatToNestedMap = createFlatToNestedMap(data, schema, '');
+
+    // Add aliases to the appropriate groups
+    for (const [flatKey, nestedPath] of Object.entries(flatToNestedMap)) {
+        const value = getNestedValue(data, nestedPath);
+        if (value !== undefined) {
+            const parts = flatKey.split('_');
+            if (parts.length >= 2) {
+                const groupName = parts[0];
+                const aliasKey = parts.slice(1).join('_');
+                if (data[groupName] && typeof data[groupName] === 'object') {
+                    (data[groupName] as any)[aliasKey] = value;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Creates a map from flattened keys to their nested paths
+ * @param data - Data object (for structure reference)
+ * @param schema - Schema definition
+ * @param prefix - Current prefix
+ * @returns Map of flat keys to nested paths
+ */
+function createFlatToNestedMap(
+    data: EnvData,
+    schema: SchemaNode,
+    prefix: string
+): Record<string, string[]> {
+    const map: Record<string, string[]> = {};
+
+    for (const key in schema) {
+        const node = schema[key];
+        const newPrefix = prefix ? `${prefix}_${key}` : key;
+
+        if (typeof node === 'object' && node !== null && !('type' in node)) {
+            // Nested group - recurse
+            Object.assign(map, createFlatToNestedMap(data, node as SchemaNode, newPrefix));
+        } else {
+            // Leaf field
+            map[newPrefix] = newPrefix.split('_');
+        }
+    }
+
+    return map;
+}
+
+/**
  * Finds the nested path for a flat key using schema
  * @param flatKey - Flat key like 'AWS_ENDPOINT'
  * @param schema - Schema to search

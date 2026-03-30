@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Injector } from '../../src/core/Injector.js';
+import { addFlatAliasesToData } from '../../src/utils/flattening.js';
 
 describe('Injector Engine', () => {
   it('should powerfully flatten scoped hierarchical environment grouping data properly', () => {
@@ -168,5 +169,49 @@ describe('Injector Engine', () => {
     expect(merged.DATABASE.HOST).toBe('db-host');
     // Since fallback is enabled, plain HOST is considered for mapping if unique leaf exists; we avoid phantom top-level HOST
     expect(merged.HOST).toBeUndefined();
+  });
+
+  it('should add flat aliases to data for destructuring support', () => {
+    const data = {
+      AWS: {
+        ACCESS: {
+          KEY: {
+            ID: 'test-id'
+          }
+        },
+        SECRET: {
+          ACCESS: {
+            KEY: 'test-secret'
+          }
+        },
+        REGION: 'us-east-1'
+      }
+    };
+
+    const schema: any = {
+      AWS: {
+        ACCESS: {
+          KEY: {
+            ID: { type: 'string', required: true }
+          }
+        },
+        SECRET: {
+          ACCESS: {
+            KEY: { type: 'string', required: true }
+          }
+        },
+        REGION: { type: 'string', required: true }
+      }
+    };
+
+    addFlatAliasesToData(data as any, schema);
+
+    // Check that flat aliases are added to the AWS group
+    expect(data.AWS.ACCESS_KEY_ID).toBe('test-id');
+    expect(data.AWS.SECRET_ACCESS_KEY).toBe('test-secret');
+    expect(data.AWS.REGION).toBe('us-east-1'); // This should still exist as the original
+
+    // Also check that nested structure still works
+    expect(data.AWS.ACCESS.KEY.ID).toBe('test-id');
   });
 });
