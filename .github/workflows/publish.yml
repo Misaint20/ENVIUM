@@ -3,7 +3,12 @@ name: Publish to npm
 on:
   push:
     branches:
-      - main # Se dispara cada vez que hagas push a la rama principal
+      - main
+
+# 💡 ESTA ES LA SECCIÓN QUE FALTA
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   build-and-publish:
@@ -21,9 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
-        run: npm test
-        # Si los tests fallan, el workflow se detiene aquí y no publica nada (Seguridad SOLID)
+      - name: Run tests (Vitest)
+        run: npm run test
 
       - name: Build package
         run: npm run build
@@ -32,5 +36,6 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
           npm publish --access public
+
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
