@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/misaint20/ENVIUM"
+    "url": "https://github.com/Misaint20/ENVIUM"
   },
   "exports": {
     ".": {
