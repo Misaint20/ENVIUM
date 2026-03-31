@@ -1,6 +1,6 @@
 {
   "name": "envium-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The Zero-Boilerplate & Type-Safe Environment Manager with SOLID principles.",
   "author": "Misaint Murillo",
   "license": "MIT",
@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/misaint20/envium.git"
+    "url": "git+https://github.com/misaint20/ENVIUM"
   },
   "exports": {
     ".": {
