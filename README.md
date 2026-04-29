@@ -70,14 +70,27 @@ export const schema = {
 Import `init` and pass your exported schema. By default, Envium will automatically load the \`.env\` file from the root of your project unless configured otherwise:
 
 ```typescript
-import { init } from 'envium-js';
+import { envium } from 'envium-js';
 import { schema } from './envium.config';
 
-// Initialize and export the strongly-typed environment
-export const env = init({ 
+// Initialize the environment manager once, usually in your main entry point (e.g. app.ts)
+envium.init({ 
   schema, 
   // path: '.env', -> Loads natively from root by default
   watch: process.env.NODE_ENV !== 'production' 
+});
+```
+
+> [!TIP]
+> **Global Singleton Pattern:** You only need to call `init()` once. After initialization, you can simply import `env` anywhere else in your project. Node.js module caching ensures you always get the initialized, fully-typed proxy instance without having to pass it around!
+
+```typescript
+// Any other file in your project (e.g. database.ts)
+import { env } from 'envium-js';
+
+const connection = createConnection({
+  host: env.DATABASE.HOST,
+  port: env.SERVER.PORT
 });
 ```
 
@@ -108,20 +121,28 @@ Envium provides **event-driven development** with built-in watchers for hot-relo
 ```typescript
 import { env } from 'envium-js';
 
-// Listen for configuration reloads (e.g., when .env file changes)
-env.on('reload', (changes) => {
-  console.log('Configuration reloaded:', changes);
-  // Restart services, update connections, etc.
+// 1. The Easy Way: Listen for specific keys changing (Supports partial matches!)
+env.onChange(['PORT', 'SERVER'], (event) => {
+  console.log(`\n🔄 Change detected in: ${event.keys.join(', ')}`);
+  console.log(`Old PORT: ${event.changes['SERVER_PORT']?.old}`);
+  console.log(`New PORT: ${event.changes['SERVER_PORT']?.new}`);
+  
+  // E.g., restart your server here
 });
 
-// Emit custom events for your application logic
-env.emit('custom-event', { data: 'example' });
+// 2. The Advanced Way: Listen to all changes globally
+env.on('change', (event) => {
+  // event.keys    -> Array of changed flat keys ['SERVER_PORT', 'DATABASE_HOST']
+  // event.changes -> Dictionary with { old, new } for each changed key
+  // event.data    -> The fully updated environment tree
+  console.log('Configuration changed:', event.keys);
+});
 
 // Remove listeners when done
-env.off('reload');
+env.off('change');
 ```
 
-In development mode, Envium automatically watches your `.env` file for changes and emits `reload` events with the updated configuration. This enables seamless hot-reloading without restarting your application.
+In development mode, Envium automatically watches your `.env` file for changes. It calculates a strict diff between the old and new states and emits `change` (and `reload`) events **only** if real modifications happened. This enables seamless hot-reloading without restarting your application manually, while preventing false triggers when you just hit "Save" without making edits.
 
 **Proxy Inspection**: Use `console.log(env)` to inspect the current configuration structure with custom symbols for debugging.
 

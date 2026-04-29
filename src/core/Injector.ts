@@ -34,21 +34,17 @@ export class Injector {
     schema?: SchemaNode,
     processEnv: Record<string, string> = process.env as Record<string, string>
   ): EnvData {
-    let result: EnvData = { ...parsedData }; // Start with parsed grouped or flat structure
+    let result: EnvData = { ...parsedData };
 
-    // Convert any parsed flat keys into nested schema structure first
-  const parsedFlat = Injector.flatten(parsedData);
+    const parsedFlat = Injector.flatten(parsedData);
 
-  if (schema) {
-    // parsed .env values have priority, with leaf fallback for short flat keys coming from .env
-    result = mergeFlattAndGrouped(parsedFlat, result, schema, { allowLeafFallback: true });
-    // process.env values should still support fallback mapping for flat keys with minimal path guidance
-    result = mergeFlattAndGrouped(processEnv, result, schema, { allowLeafFallback: true });
-  } else {
-    result = mergeFlattAndGrouped(parsedFlat, result);
-    // use process.env flat values when no schema is provided, for auto-mapping in plain deployment settings
-    result = mergeFlattAndGrouped(processEnv, result);
-  }
+    if (schema) {
+      result = mergeFlattAndGrouped(parsedFlat, result, schema, { allowLeafFallback: true });
+      result = mergeFlattAndGrouped(processEnv, result, schema, { allowLeafFallback: true });
+    } else {
+      result = mergeFlattAndGrouped(parsedFlat, result);
+      result = mergeFlattAndGrouped(processEnv, result);
+    }
 
     return result;
   }
@@ -64,14 +60,12 @@ export class Injector {
         const node = schema[key];
         const flatKey = prefix ? `${prefix}_${key}` : key;
 
-        // Handle Groups
         if (typeof node === 'object' && node !== null && !('type' in node)) {
           if (!data[key] || typeof data[key] !== 'object') {
             data[key] = {};
           }
           Injector.unflattenSchema(data[key] as EnvData, node as SchemaNode, flatKey, rootData);
         } else {
-          // Leaf structural variables: Check against process.env or rootData
           const envValue = process.env[flatKey];
           const rootDataValue = rootData[flatKey];
 
@@ -79,7 +73,7 @@ export class Injector {
             data[key] = Caster.cast(envValue as string);
           } else if (rootDataValue !== undefined && prefix !== '') {
             data[key] = rootDataValue;
-            delete rootData[flatKey]; // Remove the flat version since it's now unflattened
+            delete rootData[flatKey];
           }
         }
       }

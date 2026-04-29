@@ -4,7 +4,6 @@ export type EnvData = { [key: string]: EnvValue | EnvGroup };
 
 export type FieldType = 'string' | 'number' | 'boolean';
 
-// Enhanced field definition with discriminated union
 export type FieldSpec = {
   type: FieldType;
   required?: boolean;
@@ -12,7 +11,6 @@ export type FieldSpec = {
   description?: string;
 };
 
-// Legacy interface for backward compatibility
 export interface FieldDefinition extends FieldSpec {}
 
 export interface SchemaNode {
@@ -30,20 +28,17 @@ export interface EnviumConfig {
   schema?: SchemaNode;
 }
 
-// Metadata for parsing results
 export interface ParseMetadata {
   style: 'grouped' | 'flat' | 'mixed';
-  keySourceMap: Record<string, string>; // nested key -> original flat key
-  groups: string[]; // List of group names found
+  keySourceMap: Record<string, string>;
+  groups: string[];
 }
 
-// Enhanced parse result
 export interface ParseResult {
   data: EnvData;
   metadata: ParseMetadata;
 }
 
-// Magia de TypeScript para inferir el tipo directamente del esquema en código
 export type InferType<T> = T extends 'number' ? number : T extends 'boolean' ? boolean : string;
 
 export type InferSchema<T> = T extends SchemaNode
@@ -56,14 +51,19 @@ export type InferSchema<T> = T extends SchemaNode
     }
   : never;
 
-// Utility type for schema validation
 export type SchemaField<T extends FieldSpec> = T['required'] extends true
   ? InferType<T['type']>
   : InferType<T['type']> | undefined;
 
-// Type for the env proxy with event emitter capabilities
+export interface EnvChanges {
+  keys: string[];
+  changes: Record<string, { old: any; new: any }>;
+  data: EnvData;
+}
+
 export type EnvProxy<T extends SchemaNode = any> = InferSchema<T> & {
   on?(event: string, listener: (...args: any[]) => void): void;
   off?(event: string, listener: (...args: any[]) => void): void;
   emit?(event: string, ...args: any[]): boolean;
+  onChange?(keys: string | string[], listener: (changes: EnvChanges) => void): void;
 };

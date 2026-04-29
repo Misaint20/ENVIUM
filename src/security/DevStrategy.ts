@@ -14,7 +14,6 @@ export class DevStrategy extends EventEmitter implements IStrategy {
   }
 
   apply(target: NodeJS.ProcessEnv, data: EnvData): void {
-    // In Dev mode, properties are injected but mutable.
     Injector.inject(target, data, {
       writable: true,
       configurable: true,
@@ -28,7 +27,6 @@ export class DevStrategy extends EventEmitter implements IStrategy {
       return;
     }
 
-    // Setup an fs watcher for hot-reload
     fs.watch(this.envPath, (eventType) => {
       if (eventType === 'change') {
         try {

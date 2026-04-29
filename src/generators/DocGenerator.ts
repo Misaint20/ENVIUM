@@ -30,7 +30,6 @@ export class DocGenerator {
           const defValue = def.default !== undefined ? `\`${def.default}\`` : '`-`';
           const desc = def.description || '-';
           
-          // Using GROUP_KEY for markdown tables, mapping structure neatly.
           lines += `| \`${fullKey}\` | \`${def.type}\` | ${req} | ${defValue} | ${desc} |\n`;
         }
       }

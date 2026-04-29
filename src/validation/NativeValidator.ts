@@ -13,7 +13,6 @@ export class NativeValidator {
         const dataValue = data[key];
         const fullKey = prefix ? `${prefix}.${key}` : key;
 
-        // Nested grouped section
         if (typeof fieldOrNode === 'object' && fieldOrNode !== null && !('type' in fieldOrNode)) {
           if (dataValue !== undefined && (typeof dataValue !== 'object' || dataValue === null)) {
             throw new Error(`[Envium Validation] Expected group [${fullKey}] but received a scalar/primitive value.`);
@@ -25,7 +24,6 @@ export class NativeValidator {
           );
 
           if (dataValue === undefined) {
-            // In case child defaults are resolved, update original data value
             data[key] = data[key] || {};
           }
           continue;
@@ -33,7 +31,6 @@ export class NativeValidator {
 
         const definition = fieldOrNode as FieldDefinition;
 
-        // Nullish handling
         if (dataValue === undefined) {
           if (definition.default !== undefined) {
             data[key] = definition.default;
@@ -49,7 +46,6 @@ export class NativeValidator {
           continue;
         }
 
-        // Exact Type matching validation
         const actualType = typeof dataValue;
         if (actualType !== definition.type) {
           throw new Error(`[Envium Validation] Type mismatch in '${fullKey}'. Expected ${definition.type}, but got ${actualType}`);

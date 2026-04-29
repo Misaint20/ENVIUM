@@ -18,7 +18,6 @@ export class ExampleGen {
       if (Object.prototype.hasOwnProperty.call(schema, key)) {
         const node = schema[key];
         
-        // Group format [GROUP]
         if (typeof node === 'object' && node !== null && !('type' in node)) {
           groupResult += `\n[${key}]\n`;
           for (const subKey in node) {
@@ -35,7 +34,6 @@ export class ExampleGen {
             groupResult += `${subKey}=${defaultVal}\n\n`;
           }
         } else {
-          // Root level format
           const def = node as FieldDefinition;
           if (def.description) {
             rootResult += `# ${def.description}\n`;
